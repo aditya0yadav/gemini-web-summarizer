@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini AI Interface</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-50 min-h-screen flex items-center justify-center p-6">
+    <div class="max-w-3xl w-full bg-white/80 backdrop-blur-md p-8 rounded-xl shadow-lg border border-white/20">
+        <h1 class="text-4xl font-bold text-center bg-gradient-to-r from-blue-600 to-indigo-600 text-transparent bg-clip-text mb-4">
+            Gemini AI Interface
+        </h1>
+        <p class="text-gray-600 text-center mb-6">Powered by Google's Most Advanced AI Model</p>
+
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700">
+                <i class="fas fa-globe mr-2"></i>Enter Website URL
+            </label>
+            <div class="relative mt-1">
+                <input id="urlInput" type="url" class="w-full p-3 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="https://example.com">
+                <i class="fas fa-link absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+            </div>
+        </div>
+
+        <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700">
+                <i class="fas fa-wand-magic-sparkles mr-2"></i>Your Prompt
+            </label>
+            <textarea id="prompt" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none h-32" placeholder="What would you like Gemini to analyze?"></textarea>
+        </div>
+
+        <div class="flex justify-between items-center mb-6">
+            <button id="generateButton" class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-lg transition-all duration-200 transform hover:scale-105 focus:ring-2 focus:ring-blue-500">
+                <i class="fas fa-robot mr-2"></i>Generate
+            </button>
+            <span id="status" class="text-gray-500 hidden">
+                <i class="fas fa-circle-notch fa-spin mr-2"></i>Processing...
+            </span>
+        </div>
+
+        <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 flex justify-between">
+                <span><i class="fas fa-message mr-2"></i>Generated Response</span>
+                <button id="copyButton" class="text-blue-600 hover:text-blue-800 transition-all">
+                    <i class="far fa-copy"></i> Copy
+                </button>
+            </label>
+            <div id="response" class="w-full min-h-[200px] p-4 bg-gray-100 border border-gray-300 rounded-lg font-mono text-sm mt-2"></div>
+        </div>
+
+        <p class="text-center text-gray-500 text-sm">Use Ctrl + Enter to generate quickly</p>
+    </div>
+
+    <script>
+        async function generateContent() {
+            const promptElement = document.getElementById('prompt');
+            const urlElement = document.getElementById('urlInput');
+            const responseElement = document.getElementById('response');
+            const statusElement = document.getElementById('status');
+            const generateButton = document.getElementById('generateButton');
+            
+            const prompt = promptElement.value.trim();
+            const url = urlElement.value.trim();
+        
+            if (!prompt) {
+                responseElement.textContent = 'Please enter a prompt first.';
+                return;
+            }
+        
+            if (!url) {
+                responseElement.textContent = 'Please enter a URL first.';
+                return;
+            }
+        
+            statusElement.classList.remove('hidden');
+            generateButton.disabled = true;
+            responseElement.textContent = 'Generating...';
+        
+            try {
+                const response = await fetch('/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        prompt: prompt,
+                        url: url
+                    })
+                });
+        
+                const data = await response.json();
+                responseElement.textContent = data.error ? `Error: ${data.error}` : data.response;
+            } catch (error) {
+                responseElement.textContent = 'An error occurred while generating content. Please try again.';
+            } finally {
+                statusElement.classList.add('hidden');
+                generateButton.disabled = false;
+            }
+        }
+        async function copyToClipboard() {
+            const responseText = document.getElementById('response').textContent;
+            const copyButton = document.getElementById('copyButton');
+            try {
+                await navigator.clipboard.writeText(responseText);
+                copyButton.innerHTML = '<i class="far fa-copy"></i> Copied!';
+                setTimeout(() => copyButton.innerHTML = '<i class="far fa-copy"></i> Copy', 2000);
+            } catch (err) {
+                console.error('Failed to copy text:', err);
+            }
+        }
+
+        document.getElementById('prompt').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                e.preventDefault();
+                generateContent();
+            }
+        });
+
+        document.getElementById('generateButton').addEventListener('click', generateContent);
+        document.getElementById('copyButton').addEventListener('click', copyToClipboard);
+    </script>
+</body>
+</html>
