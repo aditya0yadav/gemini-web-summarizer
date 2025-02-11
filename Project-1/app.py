@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify, send_file
 from api import generate_content, fetch_content, clean_data
+
 app = Flask(__name__)
 
 @app.route('/')
@@ -29,4 +30,4 @@ def generate():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, port=6772)
+    app.run(host='0.0.0.0', port=5000, debug=True)
