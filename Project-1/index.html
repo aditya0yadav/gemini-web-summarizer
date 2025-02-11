@@ -54,71 +54,72 @@
         <p class="text-center text-gray-500 text-sm">Use Ctrl + Enter to generate quickly</p>
     </div>
 
-    <script>
-        async function generateContent() {
-            const promptElement = document.getElementById('prompt');
-            const urlElement = document.getElementById('urlInput');
-            const responseElement = document.getElementById('response');
-            const statusElement = document.getElementById('status');
-            const generateButton = document.getElementById('generateButton');
-            
-            const prompt = promptElement.value.trim();
-            const url = urlElement.value.trim();
+<script>
+    async function generateContent() {
+        const promptElement = document.getElementById('prompt');
+        const urlElement = document.getElementById('urlInput');
+        const responseElement = document.getElementById('response');
+        const statusElement = document.getElementById('status');
+        const generateButton = document.getElementById('generateButton');
         
-            if (!prompt) {
-                responseElement.textContent = 'Please enter a prompt first.';
-                return;
-            }
-        
-            if (!url) {
-                responseElement.textContent = 'Please enter a URL first.';
-                return;
-            }
-        
-            statusElement.classList.remove('hidden');
-            generateButton.disabled = true;
-            responseElement.textContent = 'Generating...';
-        
-            try {
-                const response = await fetch('http://127.0.0.1:6772/generate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        prompt: prompt,
-                        url: url
-                    })
-                });
-        
-                const data = await response.json();
-                responseElement.textContent = data.error ? `Error: ${data.error}` : data.response;
-            } catch (error) {
-                responseElement.textContent = 'An error occurred while generating content. Please try again.';
-            } finally {
-                statusElement.classList.add('hidden');
-                generateButton.disabled = false;
-            }
+        const prompt = promptElement.value.trim();
+        const url = urlElement.value.trim();
+    
+        if (!prompt) {
+            responseElement.textContent = 'Please enter a prompt first.';
+            return;
         }
-        async function copyToClipboard() {
-            const responseText = document.getElementById('response').textContent;
-            const copyButton = document.getElementById('copyButton');
-            try {
-                await navigator.clipboard.writeText(responseText);
-                copyButton.innerHTML = '<i class="far fa-copy"></i> Copied!';
-                setTimeout(() => copyButton.innerHTML = '<i class="far fa-copy"></i> Copy', 2000);
-            } catch (err) {
-                console.error('Failed to copy text:', err);
-            }
+    
+        statusElement.classList.remove('hidden');
+        generateButton.disabled = true;
+        responseElement.textContent = 'Generating...';
+    
+        try {
+            const response = await fetch('/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt, url })
+            });
+    
+            const data = await response.json();
+            responseElement.textContent = data.error ? `Error: ${data.error}` : data.response;
+        } catch (error) {
+            responseElement.textContent = 'An error occurred while generating content. Please try again.';
+            console.error('Error:', error);
+        } finally {
+            statusElement.classList.add('hidden');
+            generateButton.disabled = false;
+        }
+    }
+
+    async function copyToClipboard() {
+        const responseText = document.getElementById('response').textContent;
+        const copyButton = document.getElementById('copyButton');
+
+        if (!responseText.trim()) {
+            alert('Nothing to copy!');
+            return;
         }
 
-        document.getElementById('prompt').addEventListener('keydown', function(e) {
-            if (e.key === 'Enter' && e.ctrlKey) {
-                e.preventDefault();
-                generateContent();
-            }
-        });
+        try {
+            await navigator.clipboard.writeText(responseText);
+            copyButton.innerHTML = '<i class="far fa-copy"></i> Copied!';
+            setTimeout(() => copyButton.innerHTML = '<i class="far fa-copy"></i> Copy', 2000);
+        } catch (err) {
+            console.error('Failed to copy text:', err);
+        }
+    }
 
-        document.getElementById('generateButton').addEventListener('click', generateContent);
-        document.getElementById('copyButton').addEventListener('click', copyToClipboard);
-    </script>
+    document.getElementById('prompt').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && e.ctrlKey) {
+            e.preventDefault();
+            generateContent();
+        }
+    });
+
+    document.getElementById('generateButton').addEventListener('click', generateContent);
+    document.getElementById('copyButton').addEventListener('click', copyToClipboard);
+</script>
+
 </body>
 </html>
